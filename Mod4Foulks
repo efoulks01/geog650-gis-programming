@@ -1,1 +1,51 @@
+# Use Python to create buffers around forest roads
+import arcpy
+# Set geoprocessing environments
+arcpy.env.workspace = r"C:\Users\evan_\iCloudDrive\Liberty\650\Mod 4\PythonGP\PythonGP\Data\SanJuan.gdb"
+arcpy.env.overwriteOutput = True
+# Set parameters used to join the BufferDistance table to the Roads feature class
+inFeatures = "Roads"
+inField = "ROUTE_TYPE"
+joinTable = "BufferDistance"
+joinField = "ROUTE_TYPE"
+# Join table to feature class
+arcpy.JoinField_management(inFeatures, inField, joinTable, joinField)
+# Set parameters used to buffer Roads feature class
+outBuffers = "RoadBuffers"
+buffField = "DISTANCE"
+# Buffer the roads based on DISTANCE attribute
+arcpy.Buffer_analysis(inFeatures, outBuffers, buffField)
 
+# Use a feature class list for geoprocessing
+import arcpy
+# Set geoprocessing environments
+arcpy.env.workspace = r"C:\Users\evan_\iCloudDrive\Liberty\650\Mod 4\PythonGP\PythonGP\Data\SanJuan.gdb"
+arcpy.env.overwriteOutput = True
+# Create list of feature classes in SanJuan.gdb
+fcList = arcpy.ListFeatureClasses()
+# Create a loop to buffer Lakes and Streams
+bufferList = []
+for fc in fcList:
+    if fc == "Lakes" or fc == "Streams":
+        arcpy.Buffer_analysis(fc, fc + "Buffer", "1000 meters")
+        bufferList.append(fc + "Buffer")
+arcpy.Union_analysis(bufferList, "WaterBuffers")
+
+#Union the Buffers to complete the treatment areas
+import arcpy
+# Set environments
+arcpy.env.workspace = r"C:\Users\evan_\iCloudDrive\Liberty\650\Mod 4\PythonGP\PythonGP\Data\SanJuan.gdb"
+arcpy.env.overwriteOutput = True
+# Create Python list of treatment area feature classes
+treatmentList = ["RoadBuffers", "WaterBuffers"]
+# Union treatment areas
+arcpy.Union_analysis(treatmentList, "NonChemical")
+# Union Part 2
+import arcpy
+arcpy.env.workspace = r"C:\Users\evan_\iCloudDrive\Liberty\650\Mod 4\PythonGP\PythonGP\Data\SanJuan.gdb"
+arcpy.management.SelectLayerByLocation('Invasive Plants', 'INTERSECT', 'NonChemical')
+<Result 'Invasive Plants'>
+with arcpy.da.UpdateCursor('Invasive Plants', "TREATMENT") as cursor:    
+for row in cursor:
+    row[0] = "NON-CHEMICAL"
+    cursor.updateRow(row)
